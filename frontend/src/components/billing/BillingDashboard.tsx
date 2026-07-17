@@ -20,7 +20,7 @@ const tiers = [
   { label: 'Tier 2', from: 50, to: 500, rate: '₹1.50/GB' },
   { label: 'Tier 3', from: 500, to: 1000, rate: '₹1.00/GB' },
 ]
-const TIER_CAP = 1000 // GB — visual scale ceiling
+const TIER_CAP = 1000
 
 function StatCard({ label, value, sublabel }: { label: string; value: string; sublabel?: string }) {
   return (
@@ -69,7 +69,8 @@ function TierBar({ currentGb }: { currentGb: number }) {
 function WeeklyChart() {
   const { data: weekly, isLoading } = useQuery({
     queryKey: ['usage-weekly'],
-    queryFn: () => api.get('/billing/usage/weekly').then(r => r.data)
+    queryFn: () => api.get('/billing/usage/weekly').then(r => r.data),
+    refetchInterval: 5000,
   })
 
   return (
@@ -111,7 +112,8 @@ export default function BillingDashboard() {
 
   const { data: usage, refetch } = useQuery({
     queryKey: ['usage'],
-    queryFn: () => api.get('/billing/usage').then(r => r.data)
+    queryFn: () => api.get('/billing/usage').then(r => r.data),
+    refetchInterval: 3000,
   })
 
   const pay = useMutation({
