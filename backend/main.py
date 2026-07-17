@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from auth import get_current_user
 from storage import get_upload_url, get_download_url, delete_file, list_files
 from metering import push_upload_event
-from billing_sync import get_usage, create_order, verify_payment
+from billing_sync import get_usage, create_order, verify_payment, get_weekly_usage
 
 app = FastAPI()
 
@@ -37,6 +37,10 @@ def delete(filename: str, user_id: str = Depends(get_current_user)):
 @app.get("/billing/usage")
 def usage(user_id: str = Depends(get_current_user)):
     return get_usage(user_id)
+
+@app.get("/billing/usage/weekly")
+def usage_weekly(user_id: str = Depends(get_current_user)):
+    return get_weekly_usage(user_id)
 
 @app.post("/billing/pay")
 def pay(user_id: str = Depends(get_current_user)):

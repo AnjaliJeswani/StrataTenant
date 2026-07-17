@@ -8,8 +8,10 @@ def push_upload_event(user_id: str, filename: str, object_name: str):
         "object_name": object_name,
         "bucket": settings.minio_bucket
     })
-    httpx.post(
+    response = httpx.post(
         f"{settings.upstash_redis_url}/lpush/upload_events",
         headers={"Authorization": f"Bearer {settings.upstash_redis_token}"},
         json=[event]
     )
+    print("UPSTASH PUSH STATUS:", response.status_code)
+    print("UPSTASH PUSH BODY:", response.text)

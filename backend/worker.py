@@ -3,7 +3,7 @@ from config import settings
 from storage import get_file_size
 from supabase import create_client
 
-supabase = create_client(settings.supabase_url, settings.supabase_anon_key)
+supabase = create_client(settings.supabase_url, settings.supabase_service_role_key)
 
 def pop_event():
     response = httpx.post(
@@ -11,9 +11,12 @@ def pop_event():
         headers={"Authorization": f"Bearer {settings.upstash_redis_token}"}
     )
     result = response.json().get("result")
-    if result:
-        return json.loads(result)
-    return None
+    if not result:
+        return None
+    parsed = json.loads(result)
+    if isinstance(parsed, list):
+        parsed = json.loads(parsed[0])
+    return parsed
 
 def process_event(event):
     try:
@@ -33,6 +36,8 @@ if __name__ == "__main__":
     while True:
         event = pop_event()
         if event:
+            print("GOT EVENT:", event)
             process_event(event)
         else:
+            print("no event, sleeping...")
             time.sleep(2)

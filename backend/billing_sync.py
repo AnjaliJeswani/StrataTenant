@@ -1,8 +1,9 @@
 import razorpay, hmac, hashlib
+from datetime import datetime, timedelta, timezone
 from config import settings
 from supabase import create_client
 
-supabase = create_client(settings.supabase_url, settings.supabase_anon_key)
+supabase = create_client(settings.supabase_url, settings.supabase_service_role_key)
 rz = razorpay.Client(auth=(settings.razorpay_key_id, settings.razorpay_key_secret))
 
 def calculate_bill(size_bytes: int) -> float:
@@ -21,6 +22,36 @@ def get_usage(user_id: str):
     total_bytes = sum(row["size_bytes"] for row in result.data)
     bill_inr = calculate_bill(total_bytes)
     return {"total_bytes": total_bytes, "bill_inr": round(bill_inr, 2)}
+
+def get_weekly_usage(user_id: str):
+    result = supabase.table("usage").select("size_bytes, uploaded_at").eq("user_id", user_id).order("uploaded_at").execute()
+    rows = result.data
+
+    running_total = 0
+    daily_cumulative = {}
+    for row in rows:
+        running_total += row["size_bytes"]
+        day = row["uploaded_at"][:10]
+        daily_cumulative[day] = running_total
+
+    today = datetime.now(timezone.utc).date()
+    days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+
+    output = []
+    last_known = 0
+    for day_str, total in sorted(daily_cumulative.items()):
+        if datetime.fromisoformat(day_str).date() < days[0]:
+            last_known = total
+
+    for d in days:
+        d_str = d.isoformat()
+        if d_str in daily_cumulative:
+            last_known = daily_cumulative[d_str]
+        output.append({
+            "day": d.strftime("%a"),
+            "gb": round(last_known / (1024 ** 3), 3)
+        })
+    return output
 
 def create_order(user_id: str):
     usage = get_usage(user_id)

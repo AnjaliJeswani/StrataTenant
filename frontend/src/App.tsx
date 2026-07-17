@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from './hooks/useAuth'
 import FileManager from './components/files/FileManager'
 import BillingDashboard from "./components/billing/BillingDashboard";
+import { ToastProvider } from './lib/toast'
 
 const queryClient = new QueryClient()
 
@@ -22,10 +23,10 @@ function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-sm w-80">
-        <h1 className="text-2xl font-bold mb-2">Nexus Storage</h1>
-        <p className="text-gray-400 text-sm mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+      <div className="bg-slate-900/60 border border-slate-800 p-8 rounded-xl shadow-sm w-full max-w-xs">
+        <h1 className="text-2xl font-bold mb-2 text-slate-50">Strata Tenant</h1>
+        <p className="text-slate-400 text-sm mb-6">
           {isSignup ? 'Create an account' : 'Welcome back'}
         </p>
         <input
@@ -33,28 +34,28 @@ function LoginScreen() {
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="w-full border rounded p-2 mb-3 text-sm"
+          className="w-full border border-slate-700 bg-slate-950 text-slate-50 placeholder-slate-500 rounded p-2 mb-3 text-sm"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          className="w-full border rounded p-2 mb-4 text-sm"
+          className="w-full border border-slate-700 bg-slate-950 text-slate-50 placeholder-slate-500 rounded p-2 mb-4 text-sm"
         />
         <button
           onClick={handleSubmit}
-          className="w-full bg-black text-white py-2 rounded font-semibold hover:bg-gray-800"
+          className="w-full bg-indigo-500 text-white py-2 rounded font-semibold hover:bg-indigo-400 transition"
         >
           {isSignup ? 'Sign Up' : 'Log In'}
         </button>
         <p
-          className="text-center text-sm mt-3 text-gray-500 cursor-pointer hover:underline"
+          className="text-center text-sm mt-3 text-slate-400 cursor-pointer hover:underline"
           onClick={() => { setIsSignup(!isSignup); setMsg('') }}
         >
           {isSignup ? 'Already have an account? Log in' : 'No account? Sign up'}
         </p>
-        {msg && <p className="text-red-500 text-xs mt-3 text-center">{msg}</p>}
+        {msg && <p className="text-red-400 text-xs mt-3 text-center">{msg}</p>}
       </div>
     </div>
   )
@@ -65,29 +66,29 @@ function Dashboard() {
   const [tab, setTab] = useState<'files' | 'billing'>('files')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-4 flex justify-between items-center">
-        <h1 className="font-bold text-lg">Nexus Storage</h1>
+    <div className="min-h-screen bg-slate-950">
+      <header className="bg-slate-900/60 border-b border-slate-800 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <h1 className="font-bold text-lg text-slate-50">Strata Tenant</h1>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user?.email}</span>
+          <span className="text-sm text-slate-400 truncate max-w-[180px] sm:max-w-none">{user?.email}</span>
           <button
             onClick={logout}
-            className="text-sm text-gray-500 hover:underline"
+            className="text-sm text-slate-400 hover:underline shrink-0"
           >
             Logout
           </button>
         </div>
       </header>
 
-      <nav className="bg-white border-b px-6 flex gap-6">
+      <nav className="bg-slate-900/60 border-b border-slate-800 px-4 sm:px-6 flex gap-6 overflow-x-auto">
         {(['files', 'billing'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`py-3 text-sm font-medium capitalize border-b-2 -mb-px
+            className={`py-3 text-sm font-medium capitalize border-b-2 -mb-px transition whitespace-nowrap
               ${tab === t
-                ? 'border-black text-black'
-                : 'border-transparent text-gray-500'
+                ? 'border-indigo-400 text-slate-50'
+                : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
           >
             {t}
@@ -95,7 +96,7 @@ function Dashboard() {
         ))}
       </nav>
 
-      <main className="max-w-3xl mx-auto mt-6">
+      <main className="max-w-3xl mx-auto mt-6 px-4 sm:px-0">
         {tab === 'files' ? <FileManager /> : <BillingDashboard />}
       </main>
     </div>
@@ -105,8 +106,8 @@ function Dashboard() {
 function AppInner() {
   const { user, loading } = useAuth()
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-400">Loading...</p>
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <p className="text-slate-400">Loading...</p>
     </div>
   )
   return user ? <Dashboard /> : <LoginScreen />
@@ -115,7 +116,9 @@ function AppInner() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppInner />
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

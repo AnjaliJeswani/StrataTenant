@@ -1,21 +1,20 @@
 from fastapi import HTTPException, Header
-from jose import jwt, JWTError
+from supabase import create_client, Client
 from config import settings
+
+supabase: Client = create_client(settings.supabase_url, settings.supabase_anon_key)
 
 def get_current_user(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
+
     token = authorization.split(" ")[1]
+
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            options={"verify_aud": False}
-        )
-        user_id = payload.get("sub")
-        if not user_id:
+        response = supabase.auth.get_user(token)
+        user = response.user
+        if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return user_id
-    except JWTError:
+        return user.id
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
